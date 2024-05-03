@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<title>Dynamic CindyJS Example</title>
+<script src="https://cindyjs.org/dist/latest/Cindy.js"></script>
+</head>
+<body>
+<div id="cindy-container" style="width: 800px; height: 600px"></div>
+<script>
+    let points = []; // Stores the point data
+    let joins = []; // Stores the join data
+    let joinCounter = 1; // Initiates a counter for join names
+
+    // Example dynamic points
+    const dynamicPoints = [
+    { name: "A", pos: [0, 0, 10] },
+    { name: "B", pos: [10, 0, 10] },
+    { name: "C", pos: [10, 10, 10] },
+    { name: "D", pos: [0, 10, 10] },
+    { name: "E", pos: [5, 5, 5] },
+    // You can add more points here
+    ];
+
+    // Adding points to the `points` array dynamically
+    dynamicPoints.forEach((point) => {
+    points.push({ type: "Free", name: point.name, pos: point.pos });
+});
+
+    // Generating unique names for joins dynamically
+    for (let i = 0; i < dynamicPoints.length; i++) {
+    for (let j = i + 1; j < dynamicPoints.length; j++) {
+    let joinName = "j" + joinCounter++; // Generates a unique name based on a counter
+    joins.push({
+    type: "Join",
+    name: joinName,
+    args: [dynamicPoints[i].name, dynamicPoints[j].name],
+});
+}
+}
+
+    // Combine points and joins for the geometry
+    let geometry = points.concat(joins);
+
+    CindyJS({
+    canvasname: "cindy-container",
+    geometry: geometry,
+});
+</script>
+</body>
+</html>
