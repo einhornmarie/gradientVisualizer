@@ -25,30 +25,28 @@
         <!-- Textarea with initial points as editable example -->
         <textarea id="point-input" rows="10" cols="33">
 [
-    {"name": "A", "pos": [0, 0, 10]},
-    {"name": "B", "pos": [10, 0, 10]},
-    {"name": "C", "pos": [10, 10, 10]},
-    {"name": "D", "pos": [0, 10, 10]},
-    {"name": "E", "pos": [5, 5, 10]}
+    {"pos": [0, 0, 10]},
+    {"pos": [10, 0, 10]},
+    {"pos": [10, 10, 10]},
+    {"pos": [0, 10, 10]},
+    {"pos": [5, 5, 10]}
 ]
-        </textarea
-        >
-        <button onclick="loadPoints()" id="load-points">Load Points</button>
-        <button onclick="addPoints()" id="add-points">Add Points</button>
+        </textarea>
+            <button onclick="loadPoints()" id="load-points">Load Points</button>
+            <button onClick="addPoints()" id="add-points">Add Points</button>
     </div>
 </div>
 <script>
+
     let instance = null;
 
-     let initialPoints = [
-        { name: "A", pos: [0, 0, 10] },
-        { name: "B", pos: [10, 0, 10] },
-        { name: "C", pos: [10, 10, 10] },
-        { name: "D", pos: [0, 10, 10] },
-        { name: "E", pos: [5, 5, 10] },
+    let initialPoints = [
+        { pos: [0, 0, 10]},
+        { pos: [10, 0, 10]},
+        { pos: [10, 10, 10]},
+        { pos: [0, 10, 10]},
+        { pos: [5, 5, 10]},
     ];
-    document.getElementById("load-points").addEventListener("click", loadPoints);
-    document.getElementById("add-points").addEventListener("click", addPoints);
 
     function setupCindy(points) {
         let geometry = convertPointsToGeometry(points);
@@ -56,63 +54,99 @@
         if (instance) {
             instance.shutdown(); // Shutdown the existing instance before reinitializing
         }
-
         instance = CindyJS({
             canvasname: "cindy-container",
             geometry: geometry,
         });
+
+
     }
 
     function convertPointsToGeometry(pointsArray) {
+        let id = 0;
+        let cleanPointArray = [];
         let points = [];
         let joins = [];
         let joinCounter = 1;
 
         pointsArray.forEach((point) => {
-            points.push({
-                type: "Free",
-                name: point.name,
-                pos: point.pos,
-            });
+            if(!containsPointPosition(point, points)){
+                cleanPointArray.push(point);
+                points.push({
+                    type: "Free",
+                    name: id++,
+                    pos: point.pos,
+                });
+            }
         });
+        initialPoints = cleanPointArray;
+        radiusForCircle = getMaxDistance(points) + 2;
+        //drawcircle((0,0),1); //draws a circle with radius 1 and center (0,0)
 
-        for (let i = 0; i < pointsArray.length; i++) {
-            for (let j = i + 1; j < pointsArray.length; j++) {
+
+
+        for (let i = 0; i < points.length; i++) {
+            for (let j = i + 1; j < points.length; j++) {
                 let joinName = "j" + joinCounter++;
                 joins.push({
                     type: "Join",
                     name: joinName,
-                    args: [pointsArray[i].name, pointsArray[j].name],
+                    args: [points[i].name, points[j].name],
                 });
             }
         }
         return points.concat(joins);
     }
-    function loadPoints(){
+    function getMaxDistance (points){
+        let totalDistance = 0;
+        points.forEach((point) =>{
+            let distance = 0;
+            for(let i = 0; i < 3; i++){
+                distance += Math.pow(point.pos[i],2);
+            }
+            distance = Math.sqrt(distance);
+            if(distance > totalDistance){
+                totalDistance = distance;
+            }
+        })
+        return totalDistance;
+    }
+    function containsPointPosition(point, points){
+        let  isContaining = false;
+        points.some((p)=>{
+            if(p.pos[0]=== point.pos[0] && p.pos[1] === point.pos[1] && p.pos[2] === point.pos[2] ){
+                isContaining = true;
+                return true;
+            }
+        })
+        return isContaining;
+    }
+
+    function loadPoints() {
         {
             const inputValue =
                 document.getElementById("point-input").value;
             try {
-                const pointsData = JSON.parse(inputValue);
-                initialPoints = pointsData;
-                setupCindy(pointsData);
+                initialPoints = JSON.parse(inputValue);
+                setupCindy(initialPoints);
             } catch (e) {
                 alert("Invalid JSON input");
             }
         }
     }
-    function addPoints(){
-            const inputValue =
-                document.getElementById("point-input").value;
-            try {
-                const pointsData = JSON.parse(inputValue);
-                pointsData.forEach(point =>{
-                    initialPoints.push(point);
-                })
-                setupCindy(pointsData);
-            } catch (e) {
-                alert("Invalid JSON input");
-            }
+
+    function addPoints() {
+        const inputValue =
+            document.getElementById("point-input").value;
+        try {
+            const pointsData = JSON.parse(inputValue);
+            pointsData.forEach(point => {
+                initialPoints.push(point);
+            })
+            setupCindy(initialPoints);
+        } catch (e) {
+            alert("Invalid JSON input");
+        }
     }
 
     // Initialize with example points on page load
